@@ -1,0 +1,424 @@
+Vector Search Is Not All You Need | by Anthony Alcaraz | Sep, 2023 | Towards Data Science
+https://medium.com/p/ecd0f16ad65e
+
+Write
+4
+
+You highlighted
+
+You highlighted
+
+You highlighted
+
+You highlighted
+
+You highlighted
+
+You highlighted
+
+Top highlight
+
+You highlighted
+
+Member-only story
+
+Vector Search Is Not All You Need
+
+Anthony Alcaraz
+
+·
+
+Following
+
+Published in
+
+Towards Data Science
+
+·
+6 min read
+·
+Sep 18
+
+733
+
+16
+
+Introduction
+
+Retrieval Augmented Generation (RAG) has revolutionized open-domain question answering, enabling systems to produce human-like responses to a wide array of queries. At the heart of RAG lies a retrieval module that scans a vast corpus to find relevant context passages, which are then processed by a neural generative module — often a pre-trained language model like GPT-3 — to formulate a final answer.
+
+While this approach has been highly effective, it’s not without its limitations.
+
+One of the most critical components, the vector search over embedded passages, has inherent constraints that can hamper the system’s ability to reason in a nuanced manner. This is particularly evident when questions require complex multi-hop reasoning across multiple documents.
+
+Vector search refers to searching for information using vector representations of data. It involves two key steps:
+
+Encoding data into vectors
+
+First, the data being searched is encoded into numeric vector representations. For text data like passages or documents, this is done using embedding models like BERT or RoBERTa. These models convert text into dense vectors of continuous numbers that represent the semantic meaning. Images, audio, and other formats can also be encoded into vectors using appropriate deep learning models.
+
+2. Searching using vector similarity
+
+Once data is encoded into vectors, searching involves finding vectors similar to the vector representation of the search query. This relies on distance metrics like cosine similarity to quantify how close two vectors are and rank results. The vectors with the smallest distance (highest similarity) are returned as the most relevant search hits.
+
+The key advantage of vector search is the ability to search for semantic similarity, not just literal keyword matches. The vector representations capture conceptual meaning, allowing more relevant yet linguistically distinct results to be identified. This enables a higher quality of search compared to traditional keyword matching.
+
+However, transforming data into vectors and searching in high-dimensional semantic space also comes with limitations. Balancing the tradeoffs of vector search is an active area of research.
+
+In this article, we’ll dissect the limitations of vector search, exploring why it struggles to capture diverse relationships and intricate interconnections between documents. We’ll also delve into alternative techniques, such as knowledge graph prompting, that promise to overcome these shortcomings.
+
+Understanding the strengths and weaknesses of our current AI tools is essential as they become increasingly integrated into our lives. This article aims to provide a balanced view of where vector search shines and where it falls short in augmenting the reasoning capabilities of large language models.
+
+Semantic Gap Between Questions and Answers
+
+In vector search, both the input question and passages in the corpus are encoded as dense vector representations. Relevant context is retrieved by finding passages with the highest semantic similarity to the question vector.
+
+However, questions often have an indirect relationship to the actual answers they seek.
+
+The vector for “What is the capital of France?” may not necessarily have high similarity to a passage stating “Paris is the most populous city in France”.
+
+This semantic gap means that passages containing the answer may be overlooked.
+
+The embeddings fail to capture the inferential link between the question and answer.
+
+Passage Granularity Matters
+
+In vector search systems, passages are typically represented by a single embedding vector. The granularity of these passages can vary.
+
+If the passage is very large, like an entire document, it may encompass multiple concepts. Parts of the passage may be relevant, while other parts are not.
+
+But with a single vector representing the entire passage, it is impossible to distinguish relevant sections from irrelevant ones. The passage as a whole may exhibit only weak similarity to the question vector.
+
+Conversely, using sentence-level chunks can help isolate concepts. But this increases the number of vectors in the index, adding computational overhead.
+
+There are inherent trade-offs between precision and tractability when choosing passage sizes.
+
+Struggle With Complex Reasoning
+
+Some questions demand synthesizing facts spread across multiple documents.
+
+For example, “What is the earliest historical record of winemaking?” may require piecing together dates from various sources.
+
+Vector search is ill-equipped for such multi-hop reasoning. Each passage is scored independently against the question. There is no mechanism to jointly analyze or connect information across separate results.
+
+As questions get more complex, simple similarity search reaches its limits. The system struggles to collect and contextualize facts from different passages.
+
+Black Box Model Workings
+
+In standard vector search pipelines, it is opaque how initial retrieved passages are selected. The rankings depend on the inner workings of the semantic similarity model.
+
+This lack of transparency makes results difficult to explain, verify, and improve. It also limits deployability for business-critical applications.
+
+For increased oversight, the ranking algorithms should provide some interpretability into why certain passages are deemed relevant.
+
+Modeling Diverse Relationships
+
+A core limitation of standard vector search is its singular focus on semantic similarity.
+
+However, real-world reasoning requires modeling diverse relationships between content.
+
+Knowledge Graph Prompting: A New Approach for Multi-Document Question Answering
+Multi-document question answering (MD-QA) involves answering questions that require synthesizing information across…
+
+blog.gopenai.com
+
+Knowledge graph overcomes this by explicitly encoding various connections into an interconnected graph structure. Specifically:
+
+Topical relationships — Passages are linked if they share rare or key keywords. This captures similarity in the topics discussed.
+Semantic relationships — Passage embeddings are compared to connect those with semantic proximity, even if they do not share terms.
+
+This goes beyond surface-level topic matching.
+
+Structural relationships — Passages are connected to the specific sections, pages, or documents they appear in.
+
+This encodes the contextual hierarchy.
+
+Temporal relationships — Passages discussing time-ordered events are linked chronologically.
+
+This represents the flow of events.
+
+Entity relationships — Coreference links are added between passages referencing the same real-world entities.
+
+This allows entity-centric reasoning.
+
+By incorporating these diverse signals beyond just semantic similarity, KGP provides a richer substrate for reasoning about interconnected information.
+
+Structural Relationships
+
+In contrast, standard vector search lacks any notion of these structural relationships. Passages are treated atomically without any surrounding context.
+
+Knowledge graph’s modeling of structure relationships merits further discussion. By linking passages to the specific documents or sections they appear in, the contextual hierarchy of the information is encoded.
+
+This enables explicitly reasoning about the section a certain fact is contained in, the document it originates from, and the site it was published on.
+
+Encoding the hierarchical document structure provides useful inductive biases for determining importance, validity, and relevance when reasoning across passages.
+
+Temporal Relationships
+
+This inductive bias is wholly absent in isolated vector search. Vector similarity scores do not factor temporal dynamics in any way. Retrieved passages are disconnected snapshots lacking narrative flow.
+
+The explicit modeling of temporal relationships in KGP also provides significant advantages. Ordering passages chronologically based on the events they describe enables reasoning about unfolding narratives and timelines.
+
+Knowledge graph overcomes this limitation by chaining events based on their relative timing. This unlocks richer reasoning capabilities.
+
+Entity Relationships
+
+With standard vector search, these entity links are not directly modeled. Valuable knowledge around entities is lost in the passage embeddings.
+
+Knowledge graph’s ability to connect entity references is a powerful asset. Linking passages that discuss the same real-world entities, concepts, or people allows focused reasoning around those shared elements.
+
+KGP preserves this signal, enabling entity-centric exploration of the knowledge graph. This provides structural advantages when aggregating facts about specific entities across documents.
+
+Conclusion
+
+Vector search enables efficient approximate matching based on semantic similarity. However, it has clear limitations when used in isolation for the retrieval step in RAG systems.
+
+Employing hybrid approaches that combine vector search with graph-based knowledge representation, multi-step reasoning modules, and transparent ranking algorithms can help overcome these weaknesses.
+
+As always, there is no single solution — leveraging a diverse toolkit of techniques is key to robust retrieval for real-world question answering.
+
+Image by the author
+Sources :
+
+https://medium.com/thirdai-blog/understanding-the-fundamental-limitations-of-vector-based-retrieval-for-building-llm-powered-48bb7b5a57b3
+
+https://labelbox.com/blog/how-vector-similarity-search-works/
+
+https://www.elastic.co/what-is/vector-search
+
+https://kaushikshakkari.medium.com/open-domain-question-answering-series-part-7-the-rise-of-vector-databases-in-the-world-of-9d848a3f47d5
+
+https://medium.com/@PolonioliAI/limitations-of-vectors-and-neural-search-4d81fd64482f
+
+https://medium.com/vector-database/frustrated-with-new-data-our-vector-database-can-help-e5c430b29be7
+
+https://www.singlestore.com/blog/why-your-vector-database-should-not-be-a-vector-database/
+
+https://clickhouse.com/blog/vector-search-clickhouse-p1
+
+https://www.searchenginejournal.com/semantic-search-with-vectors/467574/
+
+https://www.usenix.org/system/files/osdi23-zhang-qianxi_1.pdf
+
+https://www.infoworld.com/article/3651360/solving-complex-problems-with-vector-databases.html
+
+https://people.eecs.berkeley.edu/~matei/papers/2020/sigir_colbert.pdf
+
+https://blog.futuresmart.ai/gpt-4-semantic-search-and-vector-databases-revolutionizing-question-answering
+
+https://blog.vespa.ai/constrained-approximate-nearest-neighbor-search/
+
+https://www.pinecone.io/learn/vector-search-filtering/
+
+AI
+Deep Learning
+Machine Learning
+Software Development
+Data Science
+
+733
+
+16
+
+Written by Anthony Alcaraz
+11.3K Followers
+·
+Writer for
+
+Towards Data Science
+
+Chief AI Officer & Strategist : Explaining AI Complexity, Simplifying the intricate, sparking curiosity https://www.linkedin.com/in/anthony-alcaraz-b80763155/
+
+Following
+More from Anthony Alcaraz and Towards Data Science
+
+Anthony Alcaraz
+
+in
+
+Artificial Intelligence in Plain English
+
+Is Enhancing Knowledge Graphs with Reasoning Capabilities All You need To Reason With LLMs ?
+Knowledge graphs (KGs) have emerged as a powerful way to represent interconnected facts and entities for use in downstream AI applications…
+·
+12 min read
+·
+Oct 9
+
+251
+
+2
+
+Natassha Selvaraj
+
+in
+
+Towards Data Science
+
+Coding was Hard Until I Learned These 2 Things!
+Here’s what helped me go from “aspiring programmer” to actually landing a job in the field.
+·
+7 min read
+·
+Oct 2
+
+2.2K
+
+28
+
+Khouloud El Alami 🎃
+
+in
+
+Towards Data Science
+
+Don’t Start Your Data Science Journey Without These 5 Must-Do Steps From a Spotify Data Scientist
+A complete guide to everything I wish I’d done before starting my Data Science journey, here’s to acing your first year with data
+·
+18 min read
+·
+Sep 24
+
+2.6K
+
+24
+
+Anthony Alcaraz
+
+in
+
+AI Mind
+
+Leveraging Dependency Graphs to Enable Causal Reasoning in LLMs for Critical Decisions : A…
+Large language models (LLMs) how remarkable natural language capabilities. However, they struggle with causal reasoning — a key…
+·
+5 min read
+·
+Sep 30
+
+184
+
+See all from Anthony Alcaraz
+See all from Towards Data Science
+Recommended from Medium
+
+The Pareto Investor
+
+Microsoft’s Groundbreaking Release: AutoGen — An AI Game Changer
+In a world increasingly reliant on artificial intelligence, Microsoft has just quietly released a game-changing technology that could…
+·
+4 min read
+·
+Sep 28
+
+466
+
+5
+
+Gathnex
+
+Fine-Tuning Llama-2 LLM on Google Colab: A Step-by-Step Guide.
+Llama, Llama, Llama: 🦙 A Highly Speakable Model in Recent Times. 🗣️ Llama 2: 🌟 It’s like the rockstar of language models, developed by…
+12 min read
+·
+Sep 18
+
+197
+
+2
+
+Lists
+Predictive Modeling w/ Python
+20 stories
+·
+530 saves
+Practical Guides to Machine Learning
+10 stories
+·
+613 saves
+The New Chatbots: ChatGPT, Bard, and Beyond
+12 stories
+·
+171 saves
+Natural Language Processing
+758 stories
+·
+341 saves
+
+Noah Mayerhofer
+
+in
+
+Neo4j Developer Blog
+
+Construct Knowledge Graphs From Unstructured Text
+Our focus in this post is to extract information from unstructured text using LLMs
+8 min read
+·
+Sep 21
+
+112
+
+3
+
+Oliver Molander
+
+Gartner’s AI Hype Cycle — Way Passed its Due Date… And are We Entering a Classical ML Winter?
+When looking at Gartner’s 2023 Hype Cycle for Artificial Intelligence one can only come to one conclusion: the hype cycle itself has…
+11 min read
+·
+Sep 6
+
+408
+
+5
+
+Russell Jurney
+
+in
+
+Graphlet AI Blog
+
+LLMs-represent — >Knowledge Graphs
+On August 14, 2023, the paper Natural Language is All a Graph Needs by Ruosong Ye, Caiqi Zhang, Runhui Wang, Shuyuan Xu and Yongfeng Zhang…
+6 min read
+·
+Sep 29
+
+80
+
+Anshu
+
+in
+
+ThirdAI Blog
+
+ThirdAI’s Private and Personalizable Neural Database: Enhancing Retrieval-Augmented Generation…
+This is the final chapter (3/3) in our series on building an AI-Agent using retrieval augmented generation. In part 1/3, we discussed the…
+6 min read
+·
+Jun 29
+
+144
+
+1
+
+See more recommendations
+
+Help
+
+Status
+
+About
+
+Careers
+
+Blog
+
+Privacy
+
+Terms
+
+Text to speech
+
+Teams
